@@ -8,7 +8,7 @@ import { TripDetaoilsPage } from "./pages/trip-details";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <CreateTripPage/>,
+    element: <CreateTripPage />,
   },
   {
     path: "/trips/:tripId",
@@ -18,6 +18,6 @@ const router = createBrowserRouter([
 
 export function App() {
 
-return  <RouterProvider router={router} />
+  return <RouterProvider router={router} />
 }
 

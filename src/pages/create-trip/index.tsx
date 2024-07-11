@@ -1,8 +1,11 @@
-import { MapPin, Calendar, ArrowRight, UserRoundPlus, Settings2, } from 'lucide-react'
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { InviteGuestsModal } from './invite-guest-modal'
 import { ConfirmTripModal } from './confirm-trip-modal'
+import { DestinationAndDateStep } from '../steps/destination-and-data-step'
+import { InviteGuestsStep } from '../steps/invite-guest-step'
+import { DateRange } from 'react-day-picker'
+import { api } from '../../lib/axios'
 
 export function CreateTripPage() {
     const [isGuestInputOpen, setIGuestInputOpen] = useState(false)
@@ -11,6 +14,12 @@ export function CreateTripPage() {
     const navigate = useNavigate();
   
     const [emaislToInvite, setEmailsToInvite] = useState(['weslleyezequiel32@gmail.com'])
+
+    const [destination, setDestination] = useState('')
+    const [ownerName, setOwnerName] = useState('')
+    const [ownerEmail, setOwnerEmail] = useState('')
+    const [eventStartAdnEndStates, setEventStartAndEndDates] = useState<DateRange | undefined>(undefined);
+
   
     function openGuestInputOpen() {
       setIGuestInputOpen(true)
@@ -63,10 +72,43 @@ export function CreateTripPage() {
       setEmailsToInvite(newEmailList)
   
     }
-    function createTrip(event: FormEvent<HTMLFormElement>){
+    async function createTrip(event: FormEvent<HTMLFormElement>){
         event.preventDefault()
-        navigate('/trips/123')
-    }
+
+        console.log(destination)
+        console.log(eventStartAdnEndStates)
+        console.log(emaislToInvite)
+        console.log(ownerEmail)
+        console.log(ownerName)
+
+        if(!destination){
+          return
+        }
+
+        if(!eventStartAdnEndStates?.from || !eventStartAdnEndStates?.from){
+          return
+        }
+
+        if(emaislToInvite.length === 0){
+          return
+        }
+
+        if(!ownerEmail || !ownerName){
+
+        }
+
+         {
+          const response = await api.post("/trips", {
+            destination,
+            starts_at: eventStartAdnEndStates?.from,
+            ends_at: eventStartAdnEndStates?.to,
+            emails_to_invite: emaislToInvite,
+            owner_name: ownerName,
+            owner_email: ownerEmail,
+          })
+          const { tripId } = response.data;
+          navigate(`/trips/${tripId}`); 
+  }
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="max-w-3xl w-full px-6 text-center space-y-10">
@@ -76,47 +118,22 @@ export function CreateTripPage() {
           </div>
   
           <div className='space-y-4'>
-            <div className="h-16 bg-zinc-900 px-4 rounded-xl flex items-center shadow-shape gap-3">
-              <div className="flex items-center gap-2 flex-1">
-                <MapPin className=" size-5 text-zinc-400" />
-                <input disabled={isGuestInputOpen} type="text" placeholder="Para Onde você vai?" className="bg-transparent text-lg placeholder-zinc-400 outline-none flex-1" />
-              </div>
-              <div className="flex items-center gap-2" >
-                <Calendar className=" size-5 text-zinc-400" />
-                <input disabled={isGuestInputOpen} type="text" placeholder="Quando?" className="bg-transparent text-lg placeholder-zinc-400 w-40 outline-none" />
-              </div>
-              <div className='w-px h-6 bg-zinc-800'>
-              </div>
-  
-              {isGuestInputOpen ? (<button onClick={closeGuestInput} className='bg-zinc-800 text-zinc-200 rounded-lg px-5 py-2 font font-medium flex items-center gap-2 hover:bg-zinc-700'>Alterar loca/data
-                <Settings2 />
-              </button>) : (
-                <button onClick={openGuestInputOpen} className='bg-violet-700 text-zinc-200 rounded-lg px-5 py-2 font font-medium flex items-center gap-2 hover:bg-violet-50 hover:text-gray-950'>
-                  Continuar
-                  <ArrowRight className='size-5' />
-                </button>
-              )}
-            </div>
+            <DestinationAndDateStep 
+            closeGuestInput={closeGuestInput}
+            isGuestInputOpen = {isGuestInputOpen}
+            openGuestInputOpen={openGuestInputOpen}
+            setDestination={setDestination}
+            setEventStartAdnEndStates={setEventStartAndEndDates}
+            eventStartAdnEndStates={eventStartAdnEndStates}
+            />
             {
               isGuestInputOpen && (
-                <div className="h-16 bg-zinc-900 px-4 rounded-xl flex items-center shadow-shape gap-3">
-                  <button type='button' onClick={openGuestModalOpen} className="flex items-center gap-2 flex-1 text-left">
-                    <UserRoundPlus className=" size-5 text-zinc-400" />
-                    {emaislToInvite.length > 0 ? (
-                      <span className='text-zinc-100 text-lg flex-1' >
-                        {emaislToInvite.length} pessoas(s) convidada(s)
-                      </span>
-                    ) : (
-                      <span className='text-zinc-400 text-lg flex-1'>Quem estará na viagem?</span>
-                    ) }
-                  </button>
-                  <div className='w-px h-6 bg-zinc-800'>
-                  </div>
-                  <button onClick={openConfirmTripModal} className='bg-violet-700 text-zinc-200 rounded-lg px-5 py-2 font font-medium flex items-center gap-2 hover:bg-violet-50 hover:text-gray-950'>
-                    Confirmar viagem
-                    <ArrowRight className='size-5' />
-                  </button>
-                </div>)}
+                <InviteGuestsStep
+                emaislToInvite={emaislToInvite}
+                openConfirmTripModal={openConfirmTripModal}
+                openGuestModalOpen={openGuestModalOpen}
+                />
+            )}
           </div>
   
           <p className="text-sm text-zinc-500">
@@ -139,6 +156,8 @@ export function CreateTripPage() {
         <ConfirmTripModal
         closeConfirmTripModal={closeConfirmTripModal}
         createTrip={createTrip}
+        setOwnerName={setOwnerName}
+        setOwnerEmail={setOwnerEmail}
         />
        )}
   
@@ -146,3 +165,4 @@ export function CreateTripPage() {
     )
 }
 
+}
